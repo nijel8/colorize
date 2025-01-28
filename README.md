@@ -9,4 +9,4 @@ Tested on Windows 7 64bit.
 To build run colorize_build.bat
 
 ### Download:
-Ready-to use binary: <a id="raw-url" href="https://github.com/nijel8/colorize/blob/main/bin/colorize.exe">**colorize.exe**</a>
+Ready-to-use 32bit binary: <a id="raw-url" href="https://github.com/nijel8/colorize/blob/main/bin/colorize.exe">**colorize.exe**</a>
