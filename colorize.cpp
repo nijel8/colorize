@@ -80,10 +80,10 @@ int main(int argc, char* argv[]) {
         cout << "Usage: " << argv[0] << " [options] [foreground color] [background color] \"text to colorize\" [-s]" << endl;
         cout << "" << endl;
         cout << "Options:" << endl;
-        cout << "  -h, --help   Display this help message" << endl;
-        cout << "  -f,          Display current console text color" << endl;
-        cout << "  -b,          Display current console background color" << endl;
-        cout << "  -s,          As last argument, insert space between '[color] \"text\"' groups  " << endl;
+        cout << "  -h,    Display this help message" << endl;
+        cout << "  -f,    Display current console text color" << endl;
+        cout << "  -b,    Display current console background color" << endl;
+        cout << "  -s,    As last argument, insert space between '[color] \"text\"' groups  " << endl;
         cout << "" << endl;
         cout << "Colors:" << endl;
         cout << "-----------" << endl;
