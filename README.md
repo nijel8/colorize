@@ -1,6 +1,7 @@
 # colorize
 
 Colorize Windows Command Prompt (CMD) text, use instead of ECHO command...
+Tested on Windows 7 64bit.
 
 ![**Screenshot:**](https://github.com/nijel8/colorize/blob/main/screenshot.jpg?raw=true)
 
