@@ -149,11 +149,11 @@ int main(int argc, char* argv[]) {
                 transform(b.begin(), b.end(), b.begin(), ::tolower);
                 newattr = colors[b]<<4|colors[a];
                 parts.emplace_back(newattr, c);
-                i = i+3;
+                i += 3;
             } else {
                 newattr = bgColor<<4|colors[a];
                 parts.emplace_back(newattr, b);
-                i = i+2;
+                i += 2;
             }
         } else {
             parts.emplace_back(conreset, a);
