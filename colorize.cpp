@@ -8,15 +8,14 @@
 using namespace std;
 
 HANDLE console;
-int conreset;
-bool addSpase = false;
+int initialTxtAttr;
+bool addSpace = false;
 
-void reset() {
-    if (!SetConsoleTextAttribute(console, conreset)) { // reset color
+void set_colors(string caller, int txtAttr) {
+    if (!SetConsoleTextAttribute(console, txtAttr)) {
         cout << "============================================================" << endl;
-        cout << "SetConsoleScreenBufferInfo, RESET: " << GetLastError() << endl;
+        cout << "ERROR: SetConsoleScreenBufferInfo, " << caller << ": error code " << GetLastError() << endl;
         cout << "============================================================" << endl;
-        exit(EXIT_FAILURE);
     }
 }
 
@@ -25,17 +24,13 @@ void colorize(vector<pair<int, string>> parts) {
     SetConsoleOutputCP(1251); // console encoding for Cyrillic
     for (const auto& pair : parts) {
         i++;
-        if (! SetConsoleTextAttribute(console, pair.first)) { // set new colors
-            cout << "============================================================" << endl;
-            cout << "SetConsoleScreenBufferInfo, COLORIZE: " << GetLastError() << endl;
-            cout << "============================================================" << endl;
-        }
+        set_colors("COLORIZE, " + pair.second, pair.first);
         if (i == parts.size()) {
             cout << pair.second << endl;
         } else {
-            cout << pair.second;
-            if (addSpase) {
-                reset();
+                cout << pair.second;
+            if (addSpace) {
+                set_colors("COLORIZE, addSpace, " + pair.second, initialTxtAttr); // reset colors
                 cout << " ";
             }
         }
@@ -76,16 +71,15 @@ int main(int argc, char* argv[]) {
     console = GetStdHandle(STD_OUTPUT_HANDLE);
     if (!GetConsoleScreenBufferInfo(console, &coninfo)) { // get starting colors for reset
         cout << "============================================================" << endl;
-        cout << "GetConsoleScreenBufferInfo, MAIN: " << GetLastError() << endl;
+        cout << "ERROR: GetConsoleScreenBufferInfo, MAIN: " << GetLastError() << endl;
         cout << "============================================================" << endl;
-        exit(EXIT_FAILURE);
     }
-    conreset = coninfo.wAttributes;
-    int bgColor = conreset & 0x00F0; // Mask for console background color
+    initialTxtAttr = coninfo.wAttributes;
+    int bgColor = initialTxtAttr & 0x00F0; // Mask for console background color
     bgColor >>= 4; // Shift right to get the color value
-    int fgColor = conreset & 0x0F; // Mask to get foreground color
+    int fgColor = initialTxtAttr & 0x0F; // Mask to get foreground color
 
-    if (argc == 1 || (argc > 1 && strcmp(argv[1], "-h") == 0)) {
+    if (argc == 1 || (argc == 2 && strcmp(argv[1], "-h") == 0)) {
         cout << "" << endl;
         cout << "Usage: " << argv[0] << " [options] [foreground color] [background color] \"text to colorize\" [-s]" << endl;
         cout << "" << endl;
@@ -100,22 +94,14 @@ int main(int argc, char* argv[]) {
         for(auto pair : colors) {
             if (bgColor == pair.second) {
                 cout << "  ";
-                if (! SetConsoleTextAttribute(console, fgColor<<4|pair.second)) { // set new colors
-                    cout << "============================================================" << endl;
-                    cout << "SetConsoleScreenBufferInfo, HELP: " << GetLastError() << endl;
-                    cout << "============================================================" << endl;
-                }
+                set_colors("MAIN, help, switch colors, " + pair.first, fgColor<<4|pair.second);
                 cout<< pair.first << endl;
             } else {
-                if (! SetConsoleTextAttribute(console, bgColor<<4|pair.second)) { // set new colors
-                    cout << "============================================================" << endl;
-                    cout << "SetConsoleScreenBufferInfo, HELP: " << GetLastError() << endl;
-                    cout << "============================================================" << endl;
-                }
+                set_colors("MAIN, help, colors, " + pair.first, bgColor<<4|pair.second);
                 cout << "  " << pair.first << endl;
             }
         }
-        reset();
+        set_colors("MAIN, help reset colors", initialTxtAttr); // reset colors
         cout << "-----------" << endl;
         cout << "  If no colors are specified, colorize acts as echo command" << endl;
         cout << "" << endl;
@@ -127,11 +113,12 @@ int main(int argc, char* argv[]) {
         exit(EXIT_SUCCESS);
     }
 
-    if (strcmp(argv[1], "-b") == 0) {
-        cout << color(colors, bgColor) << endl;
-        exit(EXIT_SUCCESS);
-    } else if (strcmp(argv[1], "-f") == 0) {
-        cout << color(colors, fgColor) << endl;
+    if (argc == 2) {
+        if (strcmp(argv[1], "-b") == 0) {
+            cout << color(colors, bgColor) << endl;
+        } else if (strcmp(argv[1], "-f") == 0) {
+            cout << color(colors, fgColor) << endl;
+        }
         exit(EXIT_SUCCESS);
     }
 
@@ -143,7 +130,7 @@ int main(int argc, char* argv[]) {
     int i = 1;
     if (strcmp(argv[argc-1], "-s") == 0) {
         argc--;
-        addSpase = true;
+        addSpace = true;
     }
     while (i < argc) {
         if (argc > i) {
@@ -168,13 +155,13 @@ int main(int argc, char* argv[]) {
                 i += 2;
             }
         } else {
-            parts.emplace_back(conreset, a);
+            parts.emplace_back(initialTxtAttr, a);
             i++;
         }
     }
 
     colorize(parts);
-    reset();
+    set_colors("MAIN, exit", initialTxtAttr); // reset colors
 
     exit(EXIT_SUCCESS);
 }
