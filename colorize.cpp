@@ -46,6 +46,38 @@ string color(map<string, int> colors, int c) {
     return ""; 
 }
 
+void help(map<string, int> colors, int fgColor, int bgColor) {
+    cout << "" << endl;
+    cout << "Usage: " << "colorize [options] [foreground color] [background color] \"text to colorize\" [-s]" << endl;
+    cout << "" << endl;
+    cout << "Options:" << endl;
+    cout << "  -h,    Display this help message" << endl;
+    cout << "  -f,    Display current console text color" << endl;
+    cout << "  -b,    Display current console background color" << endl;
+    cout << "  -s,    As last argument, insert space between '[color] \"text\"' groups  " << endl;
+    cout << "" << endl;
+    cout << "Colors:" << endl;
+    cout << "-----------" << endl;
+    for(auto pair : colors) {
+        if (bgColor == pair.second) {
+            cout << "  ";
+            set_colors("MAIN, help, switch colors, " + pair.first, fgColor<<4|pair.second);
+            cout<< pair.first << endl;
+        } else {
+            set_colors("MAIN, help, colors, " + pair.first, bgColor<<4|pair.second);
+            cout << "  " << pair.first << endl;
+        }
+    }
+    set_colors("MAIN, help reset colors", initialTxtAttr); // reset colors
+    cout << "-----------" << endl;
+    cout << "  If no colors are specified, colorize acts as echo command" << endl;
+    cout << "" << endl;
+    cout << "Example:" << endl;
+    cout << "  " << "colorize -f" << endl;
+    cout << "  " << "colorize ~red \"text 1 \" ~yellow ~green \"text 2 \" \"text 3\"" << endl;
+    cout << "  " << "colorize ~red \"text 1 \" ~yellow ~green \"text 2 \" \"text 3\" -s" << endl;
+}
+
 int main(int argc, char* argv[]) {
 
     map<string, int> colors = {
@@ -71,7 +103,7 @@ int main(int argc, char* argv[]) {
     console = GetStdHandle(STD_OUTPUT_HANDLE);
     if (!GetConsoleScreenBufferInfo(console, &coninfo)) { // get starting colors for reset
         cout << "============================================================" << endl;
-        cout << "ERROR: GetConsoleScreenBufferInfo, MAIN: " << GetLastError() << endl;
+        cout << "ERROR: GetConsoleScreenBufferInfo, MAIN: eror code " << GetLastError() << endl;
         cout << "============================================================" << endl;
     }
     initialTxtAttr = coninfo.wAttributes;
@@ -79,37 +111,26 @@ int main(int argc, char* argv[]) {
     bgColor >>= 4; // Shift right to get the color value
     int fgColor = initialTxtAttr & 0x0F; // Mask to get foreground color
 
-    if (argc == 1 || (argc == 2 && strcmp(argv[1], "-h") == 0)) {
-        cout << "" << endl;
-        cout << "Usage: " << argv[0] << " [options] [foreground color] [background color] \"text to colorize\" [-s]" << endl;
-        cout << "" << endl;
-        cout << "Options:" << endl;
-        cout << "  -h,    Display this help message" << endl;
-        cout << "  -f,    Display current console text color" << endl;
-        cout << "  -b,    Display current console background color" << endl;
-        cout << "  -s,    As last argument, insert space between '[color] \"text\"' groups  " << endl;
-        cout << "" << endl;
-        cout << "Colors:" << endl;
-        cout << "-----------" << endl;
-        for(auto pair : colors) {
-            if (bgColor == pair.second) {
-                cout << "  ";
-                set_colors("MAIN, help, switch colors, " + pair.first, fgColor<<4|pair.second);
-                cout<< pair.first << endl;
-            } else {
-                set_colors("MAIN, help, colors, " + pair.first, bgColor<<4|pair.second);
-                cout << "  " << pair.first << endl;
-            }
-        }
-        set_colors("MAIN, help reset colors", initialTxtAttr); // reset colors
-        cout << "-----------" << endl;
-        cout << "  If no colors are specified, colorize acts as echo command" << endl;
-        cout << "" << endl;
-        cout << "Example:" << endl;
-        cout << "  " << argv[0] << " -f" << endl;
-        cout << "  " << argv[0] << " ~red \"text 1 \" ~yellow ~green \"text 2 \" \"text 3\"" << endl;
-        cout << "  " << argv[0] << " ~red \"text 1 \" ~yellow ~green \"text 2 \" \"text 3\" -s" << endl;
+    STARTUPINFO si;
+    GetStartupInfo(&si);
 
+    if (argc == 1 && si.dwFlags & STARTF_USESHOWWINDOW) {
+        cout << "" << endl;
+        set_colors("CLICK", bgColor<<4|colors["~red"]);
+        cout << "===========================================" << endl;
+        cout << "Please, use from batch or Command Prompt..." << endl;
+        cout << "===========================================" << endl;
+        set_colors("CLICK, reset", initialTxtAttr);
+        help(colors, fgColor, bgColor);
+        cout << "" << endl;
+        set_colors("CLICK", bgColor<<4|colors["~red"]);
+        cout << "===========================================" << endl;
+        system("pause");
+        exit(EXIT_SUCCESS);
+    }
+
+    if (argc == 1 || (argc == 2 && strcmp(argv[1], "-h") == 0)) {
+        help(colors, fgColor, bgColor);
         exit(EXIT_SUCCESS);
     }
 
