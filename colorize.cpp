@@ -33,13 +33,10 @@ void colorize(vector<pair<int, string>> parts) {
         if (i == parts.size()) {
             cout << pair.second << endl;
         } else {
+            cout << pair.second;
             if (addSpase) {
-                cout << pair.second;
                 reset();
                 cout << " ";
-            } else {
-                cout << pair.second;
-
             }
         }
     }
