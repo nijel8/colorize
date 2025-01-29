@@ -22,7 +22,7 @@ void reset() {
 
 void colorize(vector<pair<int, string>> parts) {
     int i = 0;
-    SetConsoleOutputCP( 1251 ); // console encoding for Cyrillic
+    SetConsoleOutputCP(1251); // console encoding for Cyrillic
     for (const auto& pair : parts) {
         i++;
         if (! SetConsoleTextAttribute(console, pair.first)) { // set new colors
@@ -72,6 +72,19 @@ int main(int argc, char* argv[]) {
         {"~white", 15}
     };
 
+    CONSOLE_SCREEN_BUFFER_INFO coninfo;
+    console = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (!GetConsoleScreenBufferInfo(console, &coninfo)) { // get starting colors for reset
+        cout << "============================================================" << endl;
+        cout << "GetConsoleScreenBufferInfo, MAIN: " << GetLastError() << endl;
+        cout << "============================================================" << endl;
+        exit(EXIT_FAILURE);
+    }
+    conreset = coninfo.wAttributes;
+    int bgColor = conreset & 0x00F0; // Mask for console background color
+    bgColor >>= 4; // Shift right to get the color value
+    int fgColor = conreset & 0x0F; // Mask to get foreground color
+
     if (argc == 1 || (argc > 1 && strcmp(argv[1], "-h") == 0)) {
         cout << "" << endl;
         cout << "Usage: " << argv[0] << " [options] [foreground color] [background color] \"text to colorize\" [-s]" << endl;
@@ -85,8 +98,24 @@ int main(int argc, char* argv[]) {
         cout << "Colors:" << endl;
         cout << "-----------" << endl;
         for(auto pair : colors) {
-            cout << "  " << pair.first << endl;
+            if (bgColor == pair.second) {
+                cout << "  ";
+                if (! SetConsoleTextAttribute(console, fgColor<<4|pair.second)) { // set new colors
+                    cout << "============================================================" << endl;
+                    cout << "SetConsoleScreenBufferInfo, HELP: " << GetLastError() << endl;
+                    cout << "============================================================" << endl;
+                }
+                cout<< pair.first << endl;
+            } else {
+                if (! SetConsoleTextAttribute(console, bgColor<<4|pair.second)) { // set new colors
+                    cout << "============================================================" << endl;
+                    cout << "SetConsoleScreenBufferInfo, HELP: " << GetLastError() << endl;
+                    cout << "============================================================" << endl;
+                }
+                cout << "  " << pair.first << endl;
+            }
         }
+        reset();
         cout << "-----------" << endl;
         cout << "  If no colors are specified, colorize acts as echo command" << endl;
         cout << "" << endl;
@@ -98,24 +127,10 @@ int main(int argc, char* argv[]) {
         exit(EXIT_SUCCESS);
     }
 
-    CONSOLE_SCREEN_BUFFER_INFO coninfo;
-    console = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (!GetConsoleScreenBufferInfo(console, &coninfo)) { // get starting colors for reset
-        cout << "============================================================" << endl;
-        cout << "GetConsoleScreenBufferInfo, MAIN: " << GetLastError() << endl;
-        cout << "============================================================" << endl;
-        exit(EXIT_FAILURE);
-    }
-    conreset = coninfo.wAttributes;
-
-    int bgColor = conreset & 0x00F0; // Mask for console background color
-    bgColor >>= 4; // Shift right to get the color value
-
     if (strcmp(argv[1], "-b") == 0) {
         cout << color(colors, bgColor) << endl;
         exit(EXIT_SUCCESS);
     } else if (strcmp(argv[1], "-f") == 0) {
-        int fgColor = conreset & 0x0F; // Mask to get foreground color
         cout << color(colors, fgColor) << endl;
         exit(EXIT_SUCCESS);
     }
